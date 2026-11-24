@@ -41,6 +41,12 @@ jobs:
       - name: Verify dependencies
         run: go mod verify
 
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.13
+          args: --timeout=5m
+
       - name: Build
         run: go build -v ./...
 
@@ -53,24 +59,6 @@ jobs:
           name: coverage-go-${{ matrix.go-version }}
           path: coverage.out
 
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version-file: go.mod
-
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v9
-        with:
-          version: v2.13
-          args: --timeout=5m
-
   security:
     name: Security checks
     runs-on: ubuntu-latest
@@ -81,7 +69,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: stable
+          go-version-file: go.mod
 
       - name: Go vet
         run: go vet ./...
@@ -96,4 +84,4 @@ jobs:
         run: go install github.com/securego/gosec/v2/cmd/gosec@latest
 
       - name: Run gosec
-        run: gosec ./...
+        run: gosec -exclude-generated ./...
