@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package employee.v1;
+
+option go_package = "example.com/employee-service/pb";
+
+service EmployeeService {
+  rpc Create(CreateRequest) returns (CreateResponse);
+  rpc GetByID(GetByIDRequest) returns (GetByIDResponse);
+  rpc ChangePosition(ChangePositionRequest) returns (ChangePositionResponse);
+}
+
+message Employee {
+  string id = 1;
+  string full_name = 2;
+  string position = 3;
+  double salary = 4;
+  int64 hired_on = 5;
+}
+
+message CreateRequest {
+  Employee employee = 1;
+}
+
+message CreateResponse {
+  string id = 1;
+}
+
+message GetByIDRequest {
+  string id = 1;
+}
+
+message GetByIDResponse {
+  Employee employee = 1;
+}
+
+message ChangePositionRequest {
+  string id = 1;
+  string position = 2;
+}
+
+message ChangePositionResponse {}
