@@ -8,9 +8,10 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	"github.com/go-kit/log"
+	"github.com/go-kit/log/level"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -39,8 +40,8 @@ func main() {
 		)
 	}
 
-	level.Info(logger).Log("msg", "service started")
-	defer level.Info(logger).Log("msg", "service ended")
+	_ = level.Info(logger).Log("msg", "service started")
+	defer func() { _ = level.Info(logger).Log("msg", "service ended") }()
 
 	repo := repository.NewMemoryRepository()
 	svc := implementation.NewService(repo, logger)
@@ -55,17 +56,18 @@ func main() {
 	}()
 
 	go func() {
-		level.Info(logger).Log("transport", "HTTP", "addr", *httpAddr)
+		_ = level.Info(logger).Log("transport", "HTTP", "addr", *httpAddr)
 		handler := httptransport.NewService(endpoints, logger)
 		server := &http.Server{
-			Addr:    *httpAddr,
-			Handler: handler,
+			Addr:              *httpAddr,
+			Handler:           handler,
+			ReadHeaderTimeout: 10 * time.Second,
 		}
 		errs <- server.ListenAndServe()
 	}()
 
 	go func() {
-		level.Info(logger).Log("transport", "gRPC", "addr", *grpcAddr)
+		_ = level.Info(logger).Log("transport", "gRPC", "addr", *grpcAddr)
 		listener, err := net.Listen("tcp", *grpcAddr)
 		if err != nil {
 			errs <- err
@@ -77,5 +79,5 @@ func main() {
 		errs <- grpcSrv.Serve(listener)
 	}()
 
-	level.Error(logger).Log("exit", <-errs)
+	_ = level.Error(logger).Log("exit", <-errs)
 }

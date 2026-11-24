@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/log"
 	kithttp "github.com/go-kit/kit/transport/http"
+	"github.com/go-kit/log"
 	"github.com/gorilla/mux"
 
 	"example.com/employee-service/employee"
@@ -88,5 +88,5 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error()})
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{"error": err.Error()})
 }
