@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net"
@@ -15,6 +16,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"example.com/employee-service/employee"
 	"example.com/employee-service/grpctransport"
 	"example.com/employee-service/httptransport"
 	"example.com/employee-service/implementation"
@@ -43,7 +45,21 @@ func main() {
 	_ = level.Info(logger).Log("msg", "service started")
 	defer func() { _ = level.Info(logger).Log("msg", "service ended") }()
 
-	repo := repository.NewMemoryRepository()
+	var repo employee.Repository
+	if dsn := os.Getenv("DATABASE_URL"); dsn != "" {
+		pgRepo, closeRepo, err := repository.NewPostgresRepository(context.Background(), dsn)
+		if err != nil {
+			_ = level.Error(logger).Log("msg", "postgres connection failed", "err", err)
+			os.Exit(1)
+		}
+		defer closeRepo()
+		repo = pgRepo
+		_ = level.Info(logger).Log("storage", "postgres")
+	} else {
+		repo = repository.NewMemoryRepository()
+		_ = level.Info(logger).Log("storage", "memory")
+	}
+
 	svc := implementation.NewService(repo, logger)
 	endpoints := transport.MakeEndpoints(svc)
 
